@@ -1,8 +1,9 @@
 import { Meteor } from 'meteor/meteor';
+import { Router } from 'meteor/iron:router';
 import websocket from 'websocket-stream';
 
 Meteor.startup(() => {
-  // code to run on server at startup
+    // code to run on server at startup
     var ethBtcCoins = new Mongo.Collection('ethbtc');
 
     Meteor.publish('ethbtc', function() {
@@ -27,4 +28,18 @@ Meteor.startup(() => {
         var data = JSON.parse(e.data).k;
         eosBtcCoins.insert(data);
     });
+
+    Router.route("eosbtc", function() {
+        console.log("Switching to eosbtc");
+        this.response.statusCode = 200;
+        this.response.end("eosbtc");
+        eosBtcCoins.remove({}, function() {});
+    }, { where: "server" });
+
+    Router.route("ethbtc", function() {
+        console.log("Switching to ethbtc");
+        this.response.statusCode = 200;
+        this.response.end("ethbtc");
+        ethBtcCoins.remove({}, function() {});
+    }, { where: "server" });
 });

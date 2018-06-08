@@ -1,13 +1,23 @@
 <head>
-  <title>nextgen</title>
+    <title>Nextgen Crypto-Currency Pair Value Display</title>
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-    {{> hello}}
+    <h1>Crypto-currency pair value display</h1>
+    {{> PairValue}}
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+<template name="PairValue">
+    <h2>Select the currency pair</h2>
+    <div>
+      <input type="radio" id="eosbtc" name="pairValueOptions" value="eosbtc" checked>
+      <label for="eosbtc">EOS&sol;BTC</label>
+      <input type="radio" id="ethbtc" name="pairValueOptions" value="ethbtc">
+      <label for="ethbtc">ETH&sol;BTC</label>
+    </div>
+    <div>Current value of pair {{pairSymbol}} is {{pairVal}}</div>
+</template>
+
+<template name="noRoutesTemplate">
+    <div></div>
 </template>

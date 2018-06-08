@@ -1,60 +1,60 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-
+import { HTTP } from 'meteor/http'
+import { Router } from 'meteor/iron:router';
 import './main.html';
 
-Template.hello.onCreated(function helloOnCreated() {
-  // counter starts at 0
-  this.counter = new ReactiveVar(0);
-});
+    function startObserving(coinCollection, onAddedCallback) {
+        return coinCollection.find().observe({
+            added: onAddedCallback
+        });
+    }
 
-Template.hello.helpers({
-  counter() {
-    return Template.instance().counter.get();
-  },
-});
+    function coinAddedCallback(collectionName) {
+        return (coinInfo) => {
+            console.log("Added a coin in " + collectionName);
+            console.log(coinInfo);
+        };
+    }
 
-Template.hello.events({
-  'click button'(event, instance) {
-    // increment the counter when button is clicked
-    instance.counter.set(instance.counter.get() + 1);
-  },
-});
-
-    var ethBtcCoins = new Mongo.Collection('ethbtc');
-    ethBtcCoins.find().observe({
-        added: function(coinInfo) {
-            console.log("Added a coin in ethBtc");
-        }  
+    Router.configure({
+        "noRoutesTemplate": "noRoutesTemplate"
     });
 
-    Meteor.subscribe('ethbtc', {
-        onReady: function () {
-            // called when data is ready to be fetched
-            console.log("ethbtc ready");
-            console.log(ethBtcCoins.find().fetch());
+    Template.PairValue.onCreated(function pairValueOnCreated() {
+        this.pairSymbol = new ReactiveVar("eosbtc");
+        this.pairVal = new ReactiveVar(0);
+
+        this.eosbtcCoins = new Mongo.Collection("eosbtc");
+        this.ethbtcCoins = new Mongo.Collection("ethbtc");
+
+        Meteor.subscribe("eosbtc");
+        this._eosbtcObserver = startObserving(this.eosbtcCoins, coinAddedCallback("eosbtc"));
+
+        Meteor.subscribe("ethbtc");
+        // this._ethbtcObserver = startObserving(this.ethbtcCoins, coinAddedCallback("ethbtc"));
+    });
+
+    Template.PairValue.helpers({
+        pairSymbol() {
+            return Template.instance().pairSymbol.get();
         },
 
-        onStop: function () {
-          // called when data publication is stopped
+        pairVal() {
+            return Template.instance().pairVal.get();
         }
     });
-
-    var eosBtcCoins = new Mongo.Collection('eosbtc');
-    eosBtcCoins.find().observe({
-        added: function(coinInfo) {
-            console.log("Added a coin in eosBtc");
-        }  
-    });
-
-    Meteor.subscribe('eosbtc', {
-        onReady: function () {
-            // called when data is ready to be fetched
-            console.log("eosbtc ready");
-            console.log(eosBtcCoins.find().fetch());
-        },
-
-        onStop: function () {
-          // called when data publication is stopped
+    Template.PairValue.events({
+        'change'(event, instance) {
+            var option = event.currentTarget.value;
+            instance.pairSymbol.set(option);
+            HTTP.get("/" + option, {}, function() {});
+            if (option === "eosbtc") {
+                instance._ethbtcObserver.stop();
+                instance._eosbtcObserver = startObserving(instance.eosbtcCoins, coinAddedCallback("eosbtc"));
+            } else {
+                instance._eosbtcObserver.stop();
+                instance._ethbtcObserver = startObserving(instance.ethbtcCoins, coinAddedCallback("ethbtc"));
+            }
         }
     });
