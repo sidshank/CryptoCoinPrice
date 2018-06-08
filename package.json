@@ -1,0 +1,12 @@
+{
+  "name": "cryptocoinprice",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.0.0-beta.47",
+    "meteor-node-stubs": "^0.3.2",
+    "websocket-stream": "^5.1.2"
+  }
+}
