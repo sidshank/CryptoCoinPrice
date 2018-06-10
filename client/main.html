@@ -16,7 +16,11 @@
       <label for="ethbtc">ETH&sol;BTC</label>
     </div>
     <div>Current value of pair {{pairSymbol}} over time</div>
-    <div id="chartContainer" style="width: 100%; height: 400px;"></div>
+
+    <div class="chartContainer" style="width:800px; height: 400px">
+        <canvas id="myChart"></canvas>
+    </div>
+    
 </template>
 
 <template name="noRoutesTemplate">

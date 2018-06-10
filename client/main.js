@@ -2,7 +2,7 @@ import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { HTTP } from 'meteor/http'
 import { Router } from 'meteor/iron:router';
-import { anychart } from 'meteor/anychart:anychart';
+import Chart from 'chart.js';
 import './main.html';
 
     function startObserving(coinCollection, onAddedCallback) {
@@ -11,22 +11,53 @@ import './main.html';
         });
     }
 
-    function coinAddedCallback(collectionName, dataSet) {
+    function coinAddedCallback(collectionName, chart) {
         return (coinInfo) => {
             console.log("Added a coin in " + collectionName);
-            var dataPoint = {};
-            dataPoint.value = (Number.parseFloat(coinInfo.o) + 
-                Number.parseFloat(coinInfo.h) + 
-                Number.parseFloat(coinInfo.c) + 
-                Number.parseFloat(coinInfo.l)) / 4;
-                console.log(dataPoint.value);
-            dataPoint.x = ++dataNum;
-
-            if (dataNum > 20) {
-                dataSet.remove(0);
-            }
-            dataSet.append(dataPoint);
+            let open = Number.parseFloat(coinInfo.o);
+            let high = Number.parseFloat(coinInfo.h);
+            let close = Number.parseFloat(coinInfo.c);
+            let low = Number.parseFloat(coinInfo.l);
+            var value = (low + high + open + close) / 4;
+            var date = new Date();
+            var label = date.getHours() + ":" + date.getMinutes();
+            addData(chart, label, value, low, high);
         };
+    }
+
+    function addData(chart, label, value, l, h) {
+        chart.data.labels.push(label);
+        if(chart.data.labels.length === 25) {
+            chart.data.labels.shift();
+        }
+        chart.data.datasets.forEach((dataset) => {
+            dataset.data.push(value);
+            if (dataset.data.length === 26) {
+                dataset.data.shift();
+            }
+        });
+        if (0 === chart.options.scales.yAxes[0].ticks.suggestedMin) {
+            chart.options.scales.yAxes[0].ticks.suggestedMin = 0.995*value;
+            chart.options.scales.yAxes[0].ticks.min = 0.995*value;
+        }
+        if (1 ===  chart.options.scales.yAxes[0].ticks.suggestedMax) {
+            chart.options.scales.yAxes[0].ticks.suggestedMax = 1.005*value;
+            chart.options.scales.yAxes[0].ticks.max = 1.005*value;
+        }
+
+        chart.update();
+    }
+    
+    function removeData(chart) {
+        chart.data.labels = [];
+        chart.data.datasets.forEach((dataset) => {
+            dataset.data = [];
+        });
+        chart.options.scales.yAxes[0].ticks.suggestedMin = 0;
+        chart.options.scales.yAxes[0].ticks.min = 0;
+        chart.options.scales.yAxes[0].ticks.suggestedMax = 1;
+        chart.options.scales.yAxes[0].ticks.max = 1;
+        chart.update();
     }
 
     Router.configure({
@@ -46,39 +77,38 @@ import './main.html';
         this._ethbtcObserver = null;
     });
 
-    var chart;
-    var dataSet;
-    var dataNum = 0;
+    // var chart;
+    // var dataSet;
+    // var dataNum = 0;
 
     Template.PairValue.onRendered(function pairValueRendered() {
-        var container = this.find("#chartContainer");
-
-        // Turn Meteor Collection to simple array of objects.
-        var data = this.eosbtcCoins.find({}).fetch();
-        dataSet = anychart.data.set(data);
-
-        //  ----- Standard Anychart API in use -----
-        chart = anychart.line(dataSet);
-
-        chart.crosshair()
-            .enabled(true)
-            .yLabel(false)
-            .yStroke(null);
-
-        // set tooltip mode to point
-        chart.tooltip().positionMode('point');
-
-        chart.yAxis().title('Average Price');
-        chart.xAxis().labels().padding(5);
-
-        if (this.pairSymbol.get().length === 0) {
-            chart.title('Average price over time');
-        } else {
-            chart.title('Average price of ' + this.pairSymbol.get() + ' over time');
-        }        
-
-        chart.autoRedraw(true);
-        chart.container(container).draw();
+        var ctx = document.getElementById("myChart");
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Average price',
+                    data: [],
+                    backgroundColor: "rgba(1,1,1,0)",
+                    borderColor: 'rgba(255,99,132,1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true,
+                            suggestedMin: 0,
+                            suggestedMax: 1,
+                            min: 0,
+                            max: 1
+                        }
+                    }]
+                }
+            }
+        });
     });
 
     Template.PairValue.helpers({
@@ -99,24 +129,16 @@ import './main.html';
                 if (instance._ethbtcObserver) {
                     instance._ethbtcObserver.stop();
                 }
-                var dataCount = dataSet.getRowsCount();
-                for (var i = dataCount - 1; i >= 0; i--) {
-                    dataSet.remove(i);
-                }
-                dataNum = 0;
-                instance._eosbtcObserver = startObserving(instance.eosbtcCoins, coinAddedCallback("eosbtc", dataSet));
-                chart.title('Average price of ' + instance.pairSymbol.get() + ' over time');
+                removeData(instance.chart);
+                instance.chart.data.datasets[0].label = "Avg. price of EOSBTC";
+                instance._eosbtcObserver = startObserving(instance.eosbtcCoins, coinAddedCallback("eosbtc", instance.chart));
             } else {
                 if(instance._eosbtcObserver) {
                     instance._eosbtcObserver.stop();
                 }
-                var dataCount = dataSet.getRowsCount();
-                for (var i = dataCount - 1; i >= 0; i--) {
-                    dataSet.remove(i);
-                }
-                dataNum = 0;
-                instance._ethbtcObserver = startObserving(instance.ethbtcCoins, coinAddedCallback("ethbtc", dataSet));
-                chart.title('Average price of ' + instance.pairSymbol.get() + ' over time');
+                removeData(instance.chart);
+                instance.chart.data.datasets[0].label = "Avg. price of ETHBTC";
+                instance._ethbtcObserver = startObserving(instance.ethbtcCoins, coinAddedCallback("ethbtc", instance.chart));
             }
         }
     });
