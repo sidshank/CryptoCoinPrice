@@ -1,0 +1,7 @@
+{
+  "galaxy.meteor.com": {
+    "env": {
+      "MONGO_URL": "mongodb://nextgen:nextgen1@ds155220-a0.mlab.com:55220,ds155220-a1.mlab.com:55220/cryptocoin?replicaSet=rs-ds155220"
+    }
+  }
+}

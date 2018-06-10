@@ -5,9 +5,22 @@ export class CollectionManager {
         this.collections = new Map();
     }
 
+    createCollection(name) {
+        if (this.getCollection(name)) {
+            return;
+        }
+        let collection = new Mongo.Collection(name);
+        this.collections.set(name, collection);
+        if (collection.rawDatabase()) {
+            let db = collection.rawDatabase();
+            db.createIndex(name, { "createdAt": 1 }, { expireAfterSeconds: 600 });
+        } 
+        return collection;
+    }
+
     initializeCollections() {
-        this.collections.set("eosbtc", new Mongo.Collection("eosbtc"));
-        this.collections.set("ethbtc", new Mongo.Collection("ethbtc"));
+        this.createCollection("eosbtc");
+        this.createCollection("ethbtc");
 
         Meteor.publish("ethbtc", function() {
             console.log("Begin syncing ethbtc coins on server and client...");

@@ -40,6 +40,11 @@ export class RouteManager {
             let coins = collectionManager.getCollection(routeName);
             socketHandle.socket.onmessage = Meteor.bindEnvironment(function(e) {
                 var data = JSON.parse(e.data).k;
+                // Add a "createdAt" field for the data, set to the time of
+                // insertion into the database. This is used by the collection
+                // on the server to automatically remove data older than
+                // 10 minutes.
+                data.createdAt = new Date();
                 coins.insert(data);
             });
             this.response.statusCode = 200;
