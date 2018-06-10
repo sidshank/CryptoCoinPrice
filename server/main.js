@@ -1,45 +1,12 @@
 import { Meteor } from 'meteor/meteor';
-import { Router } from 'meteor/iron:router';
-import websocket from 'websocket-stream';
+import {CollectionManager} from './collections/CollectionManager.js';
+import {RouteManager} from './routing/RouteManager.js';
 
 Meteor.startup(() => {
-    // code to run on server at startup
-    var ethBtcCoins = new Mongo.Collection('ethbtc');
 
-    Meteor.publish('ethbtc', function() {
-        console.log("publishing ethbtc");
-        return ethBtcCoins.find();
-    });
+    var collectionManager = new CollectionManager();
+    collectionManager.initializeCollections();
 
-    var eosBtcCoins = new Mongo.Collection('eosbtc');
-    Meteor.publish('eosbtc', function() {
-        console.log("publishing eosbtc");
-        return eosBtcCoins.find();
-    });
-
-    var ethBtcSocket = websocket('wss://stream.binance.com:9443/ws/ethbtc@kline_1m');
-    ethBtcSocket.socket.onmessage = Meteor.bindEnvironment(function(e) {
-        var data = JSON.parse(e.data).k;
-        ethBtcCoins.insert(data);
-    });
-
-    var eosBtcSocket = websocket('wss://stream.binance.com:9443/ws/eosbtc@kline_1m');
-    eosBtcSocket.socket.onmessage = Meteor.bindEnvironment(function(e) {
-        var data = JSON.parse(e.data).k;
-        eosBtcCoins.insert(data);
-    });
-
-    Router.route("eosbtc", function() {
-        console.log("Switching to eosbtc");
-        this.response.statusCode = 200;
-        this.response.end("eosbtc");
-        eosBtcCoins.remove({}, function() {});
-    }, { where: "server" });
-
-    Router.route("ethbtc", function() {
-        console.log("Switching to ethbtc");
-        this.response.statusCode = 200;
-        this.response.end("ethbtc");
-        ethBtcCoins.remove({}, function() {});
-    }, { where: "server" });
+    var routeManager = new RouteManager(collectionManager);
+    routeManager.initializeRoutes();
 });

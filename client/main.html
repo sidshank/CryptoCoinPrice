@@ -10,12 +10,13 @@
 <template name="PairValue">
     <h2>Select the currency pair</h2>
     <div>
-      <input type="radio" id="eosbtc" name="pairValueOptions" value="eosbtc" checked>
+      <input type="radio" id="eosbtc" name="pairValueOptions" value="eosbtc">
       <label for="eosbtc">EOS&sol;BTC</label>
       <input type="radio" id="ethbtc" name="pairValueOptions" value="ethbtc">
       <label for="ethbtc">ETH&sol;BTC</label>
     </div>
-    <div>Current value of pair {{pairSymbol}} is {{pairVal}}</div>
+    <div>Current value of pair {{pairSymbol}} over time</div>
+    <div id="chartContainer" style="width: 100%; height: 400px;"></div>
 </template>
 
 <template name="noRoutesTemplate">
