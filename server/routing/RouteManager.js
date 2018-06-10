@@ -2,6 +2,9 @@ import { Meteor } from 'meteor/meteor';
 import { Router } from 'meteor/iron:router';
 import websocket from 'websocket-stream';
 
+// This class manages the different server-side routes in our app.
+// Most notably, it manages the websocket connections associated with
+// each route.
 export class RouteManager {
     constructor(collectionManager) {
         this.collectionManager = collectionManager;
@@ -9,10 +12,31 @@ export class RouteManager {
         this.socketSources = new Map();
     }
 
+    /**
+     * Initialize all routes for the application.
+     */
+    initializeRoutes() {
+        this.sockets.set("eosbtc", null);
+        this.socketSources.set("eosbtc", 'wss://stream.binance.com:9443/ws/eosbtc@kline_1m');
+
+        this.sockets.set("ethbtc", null);
+        this.socketSources.set("ethbtc", 'wss://stream.binance.com:9443/ws/ethbtc@kline_1m');
+
+        Router.route("eosbtc", this.getRouteSwitchCallback("eosbtc"), { where: "server" });
+        Router.route("ethbtc", this.getRouteSwitchCallback("ethbtc"), { where: "server" });
+    }
+
+    /**
+     * Get the socket associated with the specified route name.
+     * @param {String} name 
+     */
     getSocket(name) {
         return this.sockets.get(name);
     }
 
+    /**
+     * Close all sockets.
+     */
     closeSockets() {
         let allSockets = this.sockets[Symbol.iterator]();
         for (let item of allSockets) {
@@ -22,15 +46,24 @@ export class RouteManager {
         }
     }
 
-    openSocket(name, closeOthers) {
+    /**
+     * Open a socket for the specified route name.
+     * @param {String} name 
+     */
+    openSocket(name) {
         let socket = websocket(this.socketSources.get(name));
         this.sockets.set(name, socket);
         return socket;
     }
 
+    /**
+     * Returns a callback function to be executed when switching between
+     * routes.
+     * @param {String} routeName 
+     */
     getRouteSwitchCallback(routeName) {
-        var routeManager = this;
-        var collectionManager = this.collectionManager;
+        const routeManager = this;
+        const collectionManager = this.collectionManager;
 
         return function() {
             console.log("Switching to " + routeName);
@@ -50,16 +83,5 @@ export class RouteManager {
             this.response.statusCode = 200;
             this.response.end(routeName);
         };
-    }
-
-    initializeRoutes() {
-        this.sockets.set("eosbtc", null);
-        this.socketSources.set("eosbtc", 'wss://stream.binance.com:9443/ws/eosbtc@kline_1m');
-
-        this.sockets.set("ethbtc", null);
-        this.socketSources.set("ethbtc", 'wss://stream.binance.com:9443/ws/ethbtc@kline_1m');
-
-        Router.route("eosbtc", this.getRouteSwitchCallback("eosbtc"), { where: "server" });
-        Router.route("ethbtc", this.getRouteSwitchCallback("ethbtc"), { where: "server" });
     }
 }
