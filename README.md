@@ -1,4 +1,4 @@
-# Cryptocurrency coin price display - nextgen interview - Sid Shankar
+# Cryptocurrency coin price display
 
 ## About
 
