@@ -6,12 +6,6 @@ This is an app to display the  average price over time for two cryptocurrency pa
 
 ## System Requirements and Installation
 
-The app itself is hosted on:
-
-**http://cryptocoinprice.meteorapp.com**
-
-However, if you want to set it up on your own machine, you will need to:
-
 1. Install Chocolatey
 2. Install Meteor
 3. Have mongodb installed on your system
