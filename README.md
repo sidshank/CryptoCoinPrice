@@ -1,5 +1,7 @@
 # Cryptocurrency coin price display
 
+🚫 I am no longer maintaining this demo app I built a while ago, and have chosen to archive this repository 🚫
+
 ## About
 
 This is an app to display the  average price over time for two cryptocurrency pairs, ETH/BTC and EOS/BTC. The app provides a frontend that allows users to switch between the two pairs. When a certain symbol (pair) is selected, a websocket is opened to a 1-minute candlestick update stream on that symbol. The websocket is opened on the server, which then streams this data back to the client to chart.
