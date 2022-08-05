@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.0.0-beta.47",
-    "chart.js": "^2.7.2",
+    "chart.js": "^2.9.4",
     "meteor-node-stubs": "^0.3.2",
     "websocket-stream": "^5.1.2"
   }
